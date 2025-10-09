@@ -1,0 +1,10 @@
+{
+  "placeholderImages": [
+    {
+      "id": "qr-code",
+      "description": "A placeholder QR code for authenticator app setup.",
+      "imageUrl": "https://picsum.photos/seed/qr1/200/200",
+      "imageHint": "qr code"
+    }
+  ]
+}
