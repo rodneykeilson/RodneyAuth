@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { QrCode, Loader2, Mail } from 'lucide-react';
 import { login } from '@/app/actions';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPanel() {
@@ -24,15 +24,22 @@ export default function LoginPanel() {
 
         try {
             await login('authenticator', email, code);
-        } catch (error: any) {
-            if (error.digest?.startsWith('NEXT_REDIRECT')) {
+        } catch (error) {
+            const digest = typeof error === 'object' && error !== null && 'digest' in error
+                ? String((error as { digest?: unknown }).digest ?? '')
+                : '';
+            if (digest.startsWith('NEXT_REDIRECT')) {
                 return;
             }
+
+            const message = error instanceof Error && error.message
+                ? error.message
+                : 'An unexpected error occurred.';
 
             toast({
                 variant: 'destructive',
                 title: 'Sign In Failed',
-                description: error.message || 'An unexpected error occurred.',
+                description: message,
             });
             setIsPending(false);
         }

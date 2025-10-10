@@ -1,8 +1,6 @@
-
-
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { User, Mail, Loader2, AlertCircle } from 'lucide-react';
@@ -10,20 +8,17 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { toast } from '@/hooks/use-toast';
 import Image from 'next/image';
 import { generateAuthenticatorSecret, verifyAuthenticatorCode } from '@/app/auth/actions';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 function AuthenticatorSetup({ onComplete, userDetails }: { onComplete: () => void, userDetails: {email: string, name: string} }) {
   const [setupData, setSetupData] = useState<{ secret: string; qrCode: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
-  
-  useEffect(() => {
-  }, []);
 
   const handleGenerateSecret = async () => {
     setIsPending(true);
     try {
-      const data = await generateAuthenticatorSecret(userDetails.email, userDetails.name);
+  const data = await generateAuthenticatorSecret(userDetails.email);
       setSetupData(data);
     } catch (err) {
       console.error(err);
@@ -51,8 +46,11 @@ function AuthenticatorSetup({ onComplete, userDetails }: { onComplete: () => voi
             setError("The code is incorrect. Please check your authenticator app and try again.");
             setIsPending(false);
         }
-    } catch (err: any) {
-        setError(err.message || "An unexpected error occurred during verification.");
+  } catch (err) {
+    const message = err instanceof Error && err.message
+      ? err.message
+      : "An unexpected error occurred during verification.";
+    setError(message);
         setIsPending(false);
     }
   }

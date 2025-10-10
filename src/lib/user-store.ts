@@ -5,7 +5,7 @@ type User = {
     authenticatorSecret?: string;
 };
 
-let users: User[] = [];
+const users: User[] = [];
 
 export async function findUserByEmail(email: string): Promise<User | undefined> {
     return users.find(user => user.email === email);

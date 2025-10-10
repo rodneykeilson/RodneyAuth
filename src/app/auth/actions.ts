@@ -8,7 +8,7 @@ import { createUser, findUserByEmail } from '@/lib/user-store';
 
 const SERVICE_NAME = 'RodneyAuth';
 
-export async function generateAuthenticatorSecret(email: string, name: string) {
+export async function generateAuthenticatorSecret(email: string) {
   const secret = authenticator.generateSecret();
   const otpauth = authenticator.keyuri(email, SERVICE_NAME, secret);
 
