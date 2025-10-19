@@ -9,33 +9,52 @@ import { createUser, findUserByEmail } from '@/lib/user-store';
 const SERVICE_NAME = 'RodneyAuth';
 
 export async function generateAuthenticatorSecret(email: string) {
+  const existingUser = await findUserByEmail(email);
+  if (existingUser) {
+    throw new Error('An account with this email already exists.');
+  }
+
   const secret = authenticator.generateSecret();
   const otpauth = authenticator.keyuri(email, SERVICE_NAME, secret);
 
   const qrCode = await qrcode.toDataURL(otpauth);
-  
+
   return { secret, qrCode };
 }
 
-export async function verifyAuthenticatorCode({ code, secret, name, email }: { code: string, secret: string, name: string, email: string }) {
-  const isValid = authenticator.check(code, secret);
+export async function completeRegistration(params: {
+  email: string;
+  name: string;
+  password: string;
+  secret?: string | null;
+  code?: string | null;
+}) {
+  const { email, name, password, secret, code } = params;
 
-  if (isValid) {
-    let user = await findUserByEmail(email);
-    if (!user) {
-        user = await createUser({
-            email,
-            name,
-            authenticatorSecret: secret,
-        });
-    }
-
-    await createSession({
-      userId: user.id,
-      name: user.name,
-      authenticatorSecret: secret,
-    });
+  const existingUser = await findUserByEmail(email);
+  if (existingUser) {
+    throw new Error('An account with this email already exists.');
   }
-  
-  return isValid;
+
+  let verifiedSecret: string | null = null;
+
+  if (secret && code) {
+    const isValid = authenticator.check(code, secret);
+    if (!isValid) {
+      throw new Error('Invalid authenticator code.');
+    }
+    verifiedSecret = secret;
+  }
+
+  const user = await createUser({
+    email,
+    name,
+    password,
+    twoFactorSecret: verifiedSecret,
+    requiresTwoFactor: false,
+  });
+
+  await createSession(user.id);
+  return { twoFactorEnabled: Boolean(verifiedSecret) };
 }
+
